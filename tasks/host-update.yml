@@ -10,24 +10,17 @@
     state: latest
     security: "{{ yum_upgrade_security }}"
 
-- name: Check for kernel upgrade
-  shell: |
-    LAST_KERNEL=$(rpm -q --last kernel | awk 'NR==1{sub(/kernel-/,""); print $1}')
-    CURRENT_KERNEL=$(uname -r)
-    if [ $LAST_KERNEL != $CURRENT_KERNEL ]; then
-      echo 'no'
-    else
-      echo 'yes'
-    fi
+- name: Check for reboot hint.
+  shell: LAST_KERNEL=$(rpm -q --last kernel | awk 'NR==1{sub(/kernel-/,""); print $1}'); CURRENT_KERNEL=$(uname -r); if [ $LAST_KERNEL != $CURRENT_KERNEL ]; then echo 'reboot'; else echo 'no'; fi
   ignore_errors: true
-  register: running_latest_kernel
+  register: reboot_hint
 
-- name: Initiate reboot
-  command: sleep 2 && shutdown -r now "Reboot for kernel upgrade"
+- name: Rebooting ...
+  command: shutdown -r now "Reboot required for updated kernel"
   async: 0
   poll: 0
   ignore_errors: true
-  when: running_latest_kernel.stdout.find("no") != -1
+  when: reboot_hint.stdout.find("reboot") != -1
   register: rebooting
 
 - name: Wait for reboot to complete
