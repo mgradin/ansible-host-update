@@ -1,0 +1,36 @@
+---
+- name: Check variables
+  assert:
+    that:
+      - yum_upgrade_security == "yes" or yum_upgrade_security == "no"
+
+- name: Upgrade packages
+  dnf:
+    name: "*"
+    state: latest
+    security: "{{ yum_upgrade_security }}"
+
+- name: Check for kernel upgrade
+  shell: |
+    LAST_KERNEL=$(rpm -q --last kernel | awk 'NR==1{sub(/kernel-/,""); print $1}')
+    CURRENT_KERNEL=$(uname -r)
+    if [ $LAST_KERNEL != $CURRENT_KERNEL ]; then
+      echo 'no'
+    else
+      echo 'yes'
+    fi
+  ignore_errors: true
+  changed_when: false
+  check_mode: no
+  register: running_latest_kernel
+
+- name: Initiate reboot
+  command: sleep 2 && shutdown -r now "Reboot for kernel upgrade"
+  async: 1
+  poll: 0
+  ignore_errors: true
+  when: running_latest_kernel.stdout.find("no") != -1
+  register: rebooting
+
+- name: Wait for reboot to complete
+  wait_for_connection:

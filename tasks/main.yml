@@ -1,0 +1,4 @@
+---
+# tasks file for ansible-host-update
+- import_tasks: host-update.yml
+  become: true
