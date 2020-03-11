@@ -20,8 +20,6 @@
       echo 'yes'
     fi
   ignore_errors: true
-  changed_when: false
-  check_mode: no
   register: running_latest_kernel
 
 - name: Initiate reboot
