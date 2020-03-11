@@ -24,7 +24,7 @@
 
 - name: Initiate reboot
   command: sleep 2 && shutdown -r now "Reboot for kernel upgrade"
-  async: 1
+  async: 0
   poll: 0
   ignore_errors: true
   when: running_latest_kernel.stdout.find("no") != -1
